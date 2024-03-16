@@ -49,4 +49,16 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
     
-
+class Profile(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, blank=True, null=True, related_name='profile')
+    height = models.FloatField(blank=True, null=True)
+    weight = models.FloatField(blank=True, null=True)
+    age = models.PositiveIntegerField(blank=True, null=True)
+    body_fat = models.FloatField(blank=True, null=True)
+    phone = models.CharField(max_length=50, null=True, blank=True)
+    # image = models.ImageField()
+    # background_image = models.ImageField()
+    
+    def __str__(self):
+        return self.user.first_name
+    
