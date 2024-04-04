@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,9 +41,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     'rest_framework',
     'user',
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -124,6 +127,10 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+MEDIA_URL = '/media/'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
@@ -143,3 +150,16 @@ SIMPLE_JWT = {
 }
 
 AUTH_USER_MODEL = "user.UserAccount"
+
+CORS_ALLOW_ALL_ORIGINS= True
+
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'get_fit@gmail.com'
+EMAIL_HOST_PASSWORD = 'ymdm cgez watr lhil'
+
+# when hosting use this for safety
+# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+# CREATE A .env FILE AND SAVE THE EMAIL AND PASSWORD IN IT AND EXPORT BOTH

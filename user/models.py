@@ -40,6 +40,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique = True, max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    profile_picture = models.ImageField(upload_to='profile/images', null=True, blank=True)
     
     objects = UserAccountManager()
     
@@ -56,9 +57,30 @@ class Profile(models.Model):
     age = models.PositiveIntegerField(blank=True, null=True)
     body_fat = models.FloatField(blank=True, null=True)
     phone = models.CharField(max_length=50, null=True, blank=True)
-    # image = models.ImageField()
+    # profile_picture = models.ImageField(upload_to='profile/images', null=True, blank=True)
     # background_image = models.ImageField()
+    # followed_programmes = models.ManyToManyField('Programme', related_name='followers', blank=True, null=True)
     
     def __str__(self):
         return self.user.first_name
     
+
+# class Programme(models.Model):
+#     name = models.CharField(max_length=255)
+#     trainer = models.OneToOneField('Trainer', on_delete=models.CASCADE, related_name='programme')
+
+#     def __str__(self):
+#         return self.name
+
+# class Trainer(models.Model):
+#     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
+
+#     def __str__(self):
+#         return self.user.first_name
+
+
+
+# class Posts(models.Model):
+#     title = models.CharField()
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
