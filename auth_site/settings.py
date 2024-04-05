@@ -153,11 +153,12 @@ AUTH_USER_MODEL = "user.UserAccount"
 
 CORS_ALLOW_ALL_ORIGINS= True
 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'get_fit@gmail.com'
-EMAIL_HOST_PASSWORD = 'ymdm cgez watr lhil'
+EMAIL_HOST_USER = 'get.fit.fitnesscommunity@gmail.com'
+EMAIL_HOST_PASSWORD = 'vioc ascz frht fvsw'
 
 # when hosting use this for safety
 # EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')

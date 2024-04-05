@@ -1,13 +1,18 @@
 from rest_framework.views import APIView
-from rest_framework import permissions, status
+from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 
-from rest_framework_simplejwt import RefreshToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from .serializers import UserCreateSerializer, UserSerializer, UserWithProfileSerializer, ProfileSerializer
 from .models import Profile, UserAccount
 import time
+from .utils import Util
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 class RegisterView(APIView):
     def post(self, request):
@@ -21,10 +26,30 @@ class RegisterView(APIView):
                     error_messages += f"{message}. \n"
             print("this is the register error", error_messages)
             return Response({"error_message": error_messages.strip()}, status=status.HTTP_400_BAD_REQUEST)
-        user = serializer.create(serializer.validated_data)
-        user = UserSerializer(user)
         
-        return Response(user.data, status=status.HTTP_201_CREATED)
+        user = serializer.create(serializer.validated_data)
+        user_data = UserSerializer(user)
+        
+        
+        user = UserAccount.objects.get(email=user.email)
+        print('user in Registerview : ', user)
+        token = RefreshToken.for_user(user).access_token
+        
+        current_site = get_current_site(request).domain
+        relative_link =  reverse('email_verification')
+        absurl = 'http://' + current_site + relative_link +"?token="+ str(token)
+        email_body = 'Hi '+user.first_name + 'Use the link below to verify your email \n' + absurl
+        data = {'email_body': email_body, 'to_email': user.email, 'email_subject':'Veryfy your email'}
+        print("the data is : ", data)
+        
+        Util.send_email(data)
+        print("mail send")
+        
+        return Response(user_data.data, status=status.HTTP_201_CREATED)
+    
+class Verify_email(generics.GenericAPIView):
+    def get(self):
+        pass
     
 class RetriveUserView(APIView):
     permission_classes = [permissions.IsAuthenticated]

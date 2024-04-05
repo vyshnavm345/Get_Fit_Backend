@@ -34,7 +34,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         if profile_picture:
             user.profile_picture = profile_picture
             user.save()
-        
+        print("user created in serializer")
         return user
     
     
