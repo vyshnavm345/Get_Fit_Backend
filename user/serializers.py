@@ -92,5 +92,6 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
             "last_name",
             "email",
             "profile_picture",
+            "is_trainer",
             "profile",
         ]

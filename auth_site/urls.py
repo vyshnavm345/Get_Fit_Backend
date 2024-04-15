@@ -31,6 +31,7 @@ urlpatterns = [
     path("api/token/verify/", TokenVerifyView.as_view()),
     path("api/users/", include("user.urls")),
     path("api/trainers/", include("trainer.urls")),
+    path("api/fitness_programs/", include("fitness_program.urls")),
     path("admin/", admin.site.urls),
 ]
 if settings.DEBUG:

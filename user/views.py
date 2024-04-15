@@ -43,7 +43,6 @@ class RegisterView(APIView):
 
         user = UserAccount.objects.get(email=user.email)
         token = RefreshToken.for_user(user).access_token
-        # token = jwt.encode(user, settings.SECRET_KEY)
 
         # current_site = get_current_site(request).domain
         # relative_link = reverse("email_verification")
@@ -109,9 +108,11 @@ class RetriveUserView(APIView):
 
     def get(self, request):
         user = request.user
-        user = UserSerializer(user)
+        if user.is_verified:
+            user = UserSerializer(user)
 
-        return Response(user.data, status=status.HTTP_200_OK)
+            return Response(user.data, status=status.HTTP_200_OK)
+        return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # add a decorater here to let only the once in the verified group to access
 class Retrive_full_user_data(APIView):
@@ -120,9 +121,11 @@ class Retrive_full_user_data(APIView):
     print("got permission")
     def get(self, request):
         user = request.user
-        user = UserWithProfileSerializer(user)
+        if user.is_verified:
+            user = UserWithProfileSerializer(user)
 
-        return Response(user.data, status=status.HTTP_200_OK)
+            return Response(user.data, status=status.HTTP_200_OK)
+        return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 @api_view(["PUT"])
@@ -154,8 +157,15 @@ def update_user_profile(request):
         print("serializer is valid")
         user_instance = user_serializer.save()
         profile_instance, created = Profile.objects.get_or_create(user=user_instance)
+        
+        cleaned_profile_data = {}
+        for key, value in profile_data.items():
+            if value != 'null':  # Skip null values
+                cleaned_profile_data[key] = value
+        print("this is the cleaned profile data", cleaned_profile_data)
+        
         profile_serializer = ProfileSerializer(
-            profile_instance, data=profile_data, partial=True
+            profile_instance, data=cleaned_profile_data, partial=True
         )
         if profile_serializer.is_valid():
             print("valid profile serializer")
@@ -164,43 +174,7 @@ def update_user_profile(request):
                 {"message": "User profile updated successfully"},
                 status=status.HTTP_200_OK,
             )
+        else:
+            print("profile serializer error : ", profile_serializer.errors)
     print("This is the reason ", user_serializer.errors)
     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['PUT'])
-# def update_user_profile(request):
-#     print("this is the initial request", request.data)
-#     user_data = request.data.copy()
-#     profile_data = {
-#         'height': user_data.get('height'),
-#         'weight': user_data.get('weight'),
-#         'body_fat': user_data.get('body_fat'),
-#         'age': user_data.get('age'),
-#         'phone': user_data.get('phone'),
-#     }
-#     user_data ={
-#         "first_name": user_data.get('first_name'),
-#         "last_name": user_data.get('last_name'),
-#         "email": user_data.get('email'),
-#         "profile_picture": user_data.get('profile_picture')
-#     }
-#     print("this is the user data", user_data)
-#     print("this is the profile data", profile_data)
-
-#     user = UserAccount.objects.get(email = user_data['email'])
-#     print("current user : ", user)
-#     user_serializer = UserSerializer(user, data=user_data, partial=True)
-#     if user_serializer.is_valid():
-#         print("validated")
-#         user_instance = user_serializer.save()
-#         print("successfully saved userinstance : ", user_instance)
-
-#         profile_instance, created = Profile.objects.get_or_create(user=user_instance)
-#         print("success", profile_instance)
-#         profile_serializer = ProfileSerializer(profile_instance, data=profile_data, partial=True)
-#         if profile_serializer.is_valid():
-#             profile_serializer.save()
-#             return Response({'message': 'User profile updated successfully'}, status=status.HTTP_200_OK)
-#     print("This is the reason ",user_serializer.errors)
-#     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)

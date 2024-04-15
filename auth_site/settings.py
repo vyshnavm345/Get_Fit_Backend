@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "user",
     "trainer",
+    "fitness_program",
     "corsheaders",
 ]
 

@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from .serializers import TrainerProfileSerializer
+from .serializers import TrainerProfileSerializer, TrainerSerializer
 from .models import Trainer_profile
 
 class TrainerProfileView(APIView):
@@ -30,3 +30,23 @@ class TrainerProfileView(APIView):
         except Exception as e:
             print("error", str(e))
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class RetriveTrainerProfile(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        user = request.user
+        print("The user is user: ", user)
+        if not user.is_trainer:
+            return Response({'message':"user is not a trainer"}, status=status.HTTP_400_BAD_REQUEST)
+        trainer = Trainer_profile.objects.get(user=user)
+        serializer = TrainerSerializer(trainer)
+        print("This is the serialized trainer data : ", serializer.data)
+        
+        return Response({"data":serializer.data}, status=status.HTTP_200_OK)
+
+class RetriveAllTrainers(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        trainers = Trainer_profile.objects.all()
+        serializer = TrainerSerializer(trainers, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
