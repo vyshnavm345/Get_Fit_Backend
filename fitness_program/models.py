@@ -1,10 +1,28 @@
 from django.db import models
 from django.utils import timezone
 from trainer.models import Trainer_profile
+from django.core.exceptions import ValidationError
+from django.core.validators import URLValidator
+from urllib.parse import urlparse
+
+def validate_youtube_url(value):
+    """
+    Custom validator to ensure that the URL belongs to YouTube.
+    """
+    url_validator = URLValidator()
+    try:
+        url_validator(value)
+    except ValidationError:
+        raise ValidationError("Invalid URL")
+
+    parsed_url = urlparse(value)
+    if parsed_url.hostname != 'www.youtube.com' and parsed_url.hostname != 'youtube.com':
+        raise ValidationError("URL must be from YouTube")
 
 class FitnessProgram(models.Model):
     PROGRAM_CATEGORIES = [
         ("Cardio", "Cardio"),
+        ("Weight Loss", "Weight Loss"),
         ("Strength Training", "Strength Training"),
         ("Yoga", "Yoga"),
         ("Pilates", "Pilates"),
@@ -33,9 +51,14 @@ class FitnessProgram(models.Model):
     def __str__(self):
         return self.program_name
     
-# class Media(models.Model):
-#     url = models.URLField()
-#     program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE, related_name='media')
+class Lesson(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to="fitness_programs/lessons", null=True, blank=True)
+    description = models.TextField()
+    video_url = models.URLField(validators=[validate_youtube_url])
+    program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE, related_name='lesson')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
-#     def __str__(self):
-#         return self.url
+    def __str__(self):
+        return self.title

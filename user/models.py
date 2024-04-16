@@ -56,6 +56,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def fullname(self):
+        return f"{self.first_name} {self.last_name}" if self.last_name else self.first_name
 
 
 class Profile(models.Model):
