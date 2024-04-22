@@ -13,6 +13,7 @@ class Trainer_profile(models.Model):
         max_length=50, default="General_fitness"
     )
     phone = models.CharField(max_length=50, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to="trainer/images", null=True, blank=True)
     country = models.CharField(max_length=50, null=True, blank=True)
     about = models.CharField(max_length=700, null=True, blank=True)
     certifications = models.CharField(max_length=255, blank=True, null=True)

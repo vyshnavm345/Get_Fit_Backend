@@ -56,7 +56,7 @@ class Lesson(models.Model):
     image = models.ImageField(upload_to="fitness_programs/lessons", null=True, blank=True)
     description = models.TextField()
     video_url = models.URLField(validators=[validate_youtube_url])
-    program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE, related_name='lesson')
+    program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE, related_name='lesson', blank=True, null=True, )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

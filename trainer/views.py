@@ -5,7 +5,7 @@ from .serializers import TrainerProfileSerializer, TrainerSerializer
 from .models import Trainer_profile
 
 class TrainerProfileView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
         print("request received")
         try:
@@ -32,7 +32,7 @@ class TrainerProfileView(APIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
 class RetriveTrainerProfile(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         user = request.user
         print("The user is user: ", user)
@@ -45,7 +45,7 @@ class RetriveTrainerProfile(APIView):
         return Response({"data":serializer.data}, status=status.HTTP_200_OK)
 
 class RetriveAllTrainers(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         trainers = Trainer_profile.objects.all()
         serializer = TrainerSerializer(trainers, many=True)

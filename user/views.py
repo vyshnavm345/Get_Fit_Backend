@@ -104,6 +104,7 @@ class Verify_email(generics.GenericAPIView):
 
 
 class RetriveUserView(APIView):
+    print("retriving user data")
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -120,12 +121,17 @@ class Retrive_full_user_data(APIView):
     permission_classes = [permissions.IsAuthenticated]
     print("got permission")
     def get(self, request):
-        user = request.user
-        if user.is_verified:
-            user = UserWithProfileSerializer(user)
+        try:
+            user = request.user
+            if user.is_verified:
+                user = UserWithProfileSerializer(user)
 
-            return Response(user.data, status=status.HTTP_200_OK)
-        return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
+                return Response(user.data, status=status.HTTP_200_OK)
+            print(Response.error)
+            return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        except Exception as e:
+            return Response({"message": "An error occurred while retrieving user data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["PUT"])
