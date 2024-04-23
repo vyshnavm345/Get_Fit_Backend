@@ -37,13 +37,16 @@ class Get_fitness_program(APIView):
 # retrive programms of individual trainers
 class Get_trainer_programme(APIView):
     def get(self, request, pk):
-        trainer = Trainer_profile.objects.get(id=pk)
-        # print("The trainer is : ", trainer)
-        programs = FitnessProgram.objects.filter(trainer=trainer)
-        # print("The programmes are : ", programs)
-        serializer = FitnessProgramSerializer(programs ,many=True)
-        # print("serialized programme data : ", serializer.data)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        try:
+            trainer = Trainer_profile.objects.get(id=pk)
+            # print("The trainer is : ", trainer)
+            programs = FitnessProgram.objects.filter(trainer=trainer)
+            # print("The programmes are : ", programs)
+            serializer = FitnessProgramSerializer(programs ,many=True)
+            # print("serialized programme data : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except:
+            return Response({"message": "sorry cannot retrive the trainer programmes"}, status=status.HTTP_400_BAD_REQUEST)
     
 # create new lesson for a programme
 class CreateLesson(APIView):

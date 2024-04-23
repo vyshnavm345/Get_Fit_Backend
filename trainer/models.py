@@ -20,6 +20,9 @@ class Trainer_profile(models.Model):
     experience_years = models.PositiveIntegerField(blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
     
+    def username(self):
+        return f"{self.user.first_name} {self.user.last_name}"
+    
     def __str__(self):
         if self.user:
             return self.user.first_name if self.user.first_name else "Unknown"

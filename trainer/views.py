@@ -4,15 +4,17 @@ from rest_framework import status, permissions
 from .serializers import TrainerProfileSerializer, TrainerSerializer
 from .models import Trainer_profile
 
+
 class TrainerProfileView(APIView):
     # permission_classes = [permissions.IsAuthenticated]
     def post(self, request):
-        print("request received")
+        print("request received", request.data)
         try:
             serializer = TrainerProfileSerializer(data=request.data)
             if serializer.is_valid():
                 print("data is valid")
                 profile = Trainer_profile.objects.create(**serializer.validated_data)
+                print("the validated data is ", serializer.validated_data)
                 print("trainer profile create")
                 if profile:
                     print("trainer exists")
