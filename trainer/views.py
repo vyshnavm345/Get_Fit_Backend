@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from .serializers import TrainerProfileSerializer, TrainerSerializer
 from .models import Trainer_profile
+from user.serializers import FollowedProgramSerializer
 
 
 class TrainerProfileView(APIView):
@@ -52,3 +53,23 @@ class RetriveAllTrainers(APIView):
         trainers = Trainer_profile.objects.all()
         serializer = TrainerSerializer(trainers, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+# retrive all the subscribers and followed programs of a trainer
+class GetSubscribers(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        try:
+            user = request.user
+            trainer = Trainer_profile.objects.get(user=user)
+            subscribers = trainer.get_subscribed_users()
+            print("subscribers are : ", subscribers)
+            serializer = FollowedProgramSerializer(subscribers, many=True)
+            print("The serializer is ",serializer)
+            print("The validated data is ",serializer.data)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error", str(e))
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            
+        

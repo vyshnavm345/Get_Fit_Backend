@@ -53,6 +53,7 @@ class FitnessProgram(models.Model):
     
 class Lesson(models.Model):
     title = models.CharField(max_length=255)
+    # lesson_number=models.PositiveIntegerField(unique=True)
     image = models.ImageField(upload_to="fitness_programs/lessons", null=True, blank=True)
     description = models.TextField()
     video_url = models.URLField(validators=[validate_youtube_url])
@@ -62,3 +63,4 @@ class Lesson(models.Model):
     
     def __str__(self):
         return self.title
+    

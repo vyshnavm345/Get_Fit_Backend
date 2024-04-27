@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from django.core import exceptions
 
-from .models import Profile
+from .models import Profile, FollowedPrograms
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -56,25 +56,6 @@ class UserSerializer(serializers.ModelSerializer):
             "is_staff",
         )
 
-
-# class ProfileCreateSerializer(serializers.ModelSerializer):
-#     profile_picture = serializers.ImageField(allow_null=True, required=False)
-#     class Meta:
-#         model = Profile
-#         fields = ("height", "weight", "age", "body_fat","phone", "profile_picture")
-
-
-#     def create(self, validated_data):
-#         profile_picture = validated_data.pop('profile_picture', None)
-#         user = User.objects.create_user(**validated_data)
-
-#         if profile_picture:
-#             user.profile_picture = profile_picture
-#             user.save()
-
-#         return user
-
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
@@ -95,3 +76,21 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
             "is_trainer",
             "profile",
         ]
+
+# class FollowedProgramSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = FollowedPrograms
+#         fields = '__all__'
+        
+from fitness_program.serializers import FitnessProgramSerializer
+
+class FollowedProgramSerializer(serializers.ModelSerializer):
+    user_name = serializers.SerializerMethodField()
+    program = FitnessProgramSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = FollowedPrograms
+        fields = ['id', 'user', 'user_name', 'program', 'status', 'created_on']
+        
+    def get_user_name(self, obj):
+        return obj.user.fullname()

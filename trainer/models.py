@@ -1,9 +1,9 @@
 from django.db import models
-from user.models import UserAccount
+# from user.models import UserAccount
 
 class Trainer_profile(models.Model):
     user = models.OneToOneField(
-        UserAccount,
+        "user.UserAccount",
         on_delete=models.CASCADE,
         blank=True,
         null=True,
@@ -20,8 +20,19 @@ class Trainer_profile(models.Model):
     experience_years = models.PositiveIntegerField(blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
     
+    
     def username(self):
         return f"{self.user.first_name} {self.user.last_name}"
+    
+    # Method to retrieve users who have subscribed to the trainer's programs.
+    def get_subscribed_users(self):
+        subscribed_users = set()
+        # Get all programs owned by the trainer
+        trainer_programs = self.fitnessprogram_set.all()
+        # Traverse through each program and get the users who have subscribed to it
+        for program in trainer_programs:
+            subscribed_users |= set(program.followers.all())
+        return subscribed_users
     
     def __str__(self):
         if self.user:

@@ -1,10 +1,11 @@
 from django.db import models
+from django.utils import timezone
 from django.contrib.auth.models import (
     BaseUserManager,
     AbstractBaseUser,
     PermissionsMixin,
 )
-# from fitness_program.models import FitnessProgram
+from fitness_program.models import FitnessProgram
 
 
 class UserAccountManager(BaseUserManager):
@@ -79,8 +80,16 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.first_name
 
-
-
+    
+class FollowedPrograms(models.Model):
+    program = models.ManyToManyField(FitnessProgram, related_name='followers')
+    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name='followed_programs')
+    created_on = models.DateField(default=timezone.now)
+    status = models.CharField(max_length=50, default="Active")
+        
+    def __str__(self):
+        program_names = ', '.join(program.program_name for program in self.program.all())
+        return f"{self.user.first_name} {self.user.last_name} - Programs: {program_names}"
 
 # class Posts(models.Model):
 #     title = models.CharField()

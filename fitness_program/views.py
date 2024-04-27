@@ -54,24 +54,55 @@ class CreateLesson(APIView):
     def post(self, request, pk):
         program = FitnessProgram.objects.get(id=pk)
         print("this is the programme")
-        serializer = ProgrammeLessonSerializer(data=request.data)
-        print("the serializer is ", serializer)
-        if serializer.is_valid():
-            print("data is valid")
-            serializer.save(program=program)
-            print("serializer is saved")
-            print()
-            return Response({'message':"Lesson Added"}, status=status.HTTP_201_CREATED)
-        print("serializer error is", serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        id =request.data.get('id')
+        # lesson = Lesson.objects.get(id=id)
+        if id:
+            print("The form is for updation ", request.data)
+            try:
+                message = self.updateLesson(request, id)
+                print("back in the get method")
+                return Response(message, status=status.HTTP_200_OK)
+            except:
+                return Response({"message":"Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            serializer = ProgrammeLessonSerializer(data=request.data)
+            if serializer.is_valid():
+                print("data is valid")
+                serializer.save(program=program)
+                print("serializer is saved")
+                return Response({'message':"Lesson Added"}, status=status.HTTP_201_CREATED)
+            print("serializer error is", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+    def updateLesson(self, request, id):
+        print("updating the lesson")
+        lesson = Lesson.objects.get(id=id)
+        data = request.data.copy() 
+        if isinstance(request.data.get('image'), str):
+            print("image is a string")
+            del data['image']
+        serializer = ProgrammeLessonSerializer(instance=lesson, data=data, partial=True)
+        print("the data has been updated")
+        if serializer.is_valid():
+            print("Serializer is valid : data ")
+            serializer.save()
+            message = {'message': "Lesson updated successfully"}
+            return message
+        #     return Response({'message': "Lesson updated successfully"}, status=status.HTTP_200_OK)
+        # print("error: ",serializer.errors)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        
+        
+        
+    
+# get the list of lessons of particular program
 class GetLessonList(APIView):
     def get(self, request, pk):
         try:
             lessons = Lesson.objects.filter(program_id=pk)
-            print("THese are the lessons", lessons)
             serializer = ProgrammeLessonSerializer(lessons, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             return Response({"message":"Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        

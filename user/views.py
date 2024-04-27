@@ -2,16 +2,21 @@ from rest_framework.views import APIView
 from rest_framework import permissions, status, generics
 from rest_framework.response import Response
 from rest_framework.decorators import api_view 
+from django.core.exceptions import ValidationError
 
 from rest_framework_simplejwt.tokens import RefreshToken
+from fitness_program.serializers import FitnessProgramSerializer
+from fitness_program.models import FitnessProgram
 
 from .serializers import (
     UserCreateSerializer,
     UserSerializer,
     UserWithProfileSerializer,
     ProfileSerializer,
+    FollowedProgramSerializer,
 )
-from .models import Profile, UserAccount
+from .models import Profile, UserAccount, FollowedPrograms
+from django.shortcuts import get_object_or_404
 import time
 from .utils import Util
 from django.contrib.sites.shortcuts import get_current_site
@@ -184,3 +189,67 @@ def update_user_profile(request):
             print("profile serializer error : ", profile_serializer.errors)
     print("This is the reason ", user_serializer.errors)
     return Response(user_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetFollowedPrograms(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        try:
+            user = request.user
+            if user.is_verified:
+                programs = FollowedPrograms.objects.filter(user=user)
+                serializer = FollowedProgramSerializer(programs, many=True)
+                print(serializer.data)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("User is not verified", status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+class GetUserById(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, id):
+        try:
+            user = UserAccount.objects.get(id=id)
+            if user.is_verified:
+                user = UserWithProfileSerializer(user)
+                print("this is the user by id", user.data)
+                return Response(user.data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+# follow a particular program
+# class FollowProgram(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+#     def get(self, request, id):
+#         try:
+#             program = FitnessProgram.objects.get(id=id)
+#             user = request.user
+#             if FollowedPrograms.objects.filter(user=user, program=program).exists():
+#                 return Response({'message': 'You are already subscribed to this program'}, status=status.HTTP_200_OK)
+#             else:
+#                 FollowedPrograms.objects.create(user=user, program=program)
+#             return Response({'message': 'Successfully subscribed to the Programme'}, status=status.HTTP_200_OK)
+#         except Exception as e:
+#             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+
+class FollowProgram(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, id):
+        try:
+            program = get_object_or_404(FitnessProgram, id=id)
+            user = request.user
+            followed_program, created = FollowedPrograms.objects.get_or_create(user=user)
+            if program in followed_program.program.all():
+                return Response({'message': 'You are already subscribed to this program'}, status=status.HTTP_200_OK)
+            else:
+                followed_program.program.add(program)
+                return Response({'message': 'Successfully subscribed to the Programme'}, status=status.HTTP_200_OK)
+        except FitnessProgram.DoesNotExist:
+            return Response({'message': 'Program not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
