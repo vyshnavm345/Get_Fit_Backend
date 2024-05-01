@@ -66,6 +66,10 @@ class CreateLesson(APIView):
                 return Response({"message":"Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             serializer = ProgrammeLessonSerializer(data=request.data)
+            lesson_no = request.data.get('lesson_number')
+            already_exists = Lesson.objects.filter(lesson_number=lesson_no).exists()
+            if already_exists:
+                return Response({"message": "Lesson number already exists"}, status=status.HTTP_400_BAD_REQUEST)
             if serializer.is_valid():
                 print("data is valid")
                 serializer.save(program=program)
