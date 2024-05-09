@@ -50,6 +50,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    logged_in= models.BooleanField(default=False)
 
     objects = UserAccountManager()
 
@@ -90,7 +91,11 @@ class FollowedPrograms(models.Model):
     def __str__(self):
         program_names = ', '.join(program.program_name for program in self.program.all())
         return f"{self.user.first_name} {self.user.last_name} - Programs: {program_names}"
-
+    
+    def items(self):
+        followed_programs_list = []
+        # logic for retriving the list of followed programms by this instance
+        return followed_programs_list
 # class Posts(models.Model):
 #     title = models.CharField()
 #     created_at = models.DateTimeField(auto_now_add=True)

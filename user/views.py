@@ -8,12 +8,15 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from fitness_program.serializers import FitnessProgramSerializer
 from fitness_program.models import FitnessProgram
 
+# from django.dispatch import user_authenticated
+# from django.dispatch import user_authenticated
+
 from .serializers import (
     UserCreateSerializer,
     UserSerializer,
     UserWithProfileSerializer,
     ProfileSerializer,
-    FollowedProgramSerializer,
+    UserFollowedProgramSerializer,
 )
 from .models import Profile, UserAccount, FollowedPrograms
 from django.shortcuts import get_object_or_404
@@ -25,6 +28,7 @@ from django.contrib.auth import get_user_model
 import jwt
 from django.conf import settings
 import json
+from trainer.serializers import TrainerSerializer
 
 User = get_user_model()
 
@@ -109,7 +113,6 @@ class Verify_email(generics.GenericAPIView):
 
 
 class RetriveUserView(APIView):
-    print("retriving user data")
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
@@ -122,20 +125,18 @@ class RetriveUserView(APIView):
 
 # add a decorater here to let only the once in the verified group to access
 class Retrive_full_user_data(APIView):
-    print("getting permission")
     permission_classes = [permissions.IsAuthenticated]
-    print("got permission")
     def get(self, request):
+        print("retreving userdata")
         try:
             user = request.user
             if user.is_verified:
                 user = UserWithProfileSerializer(user)
-
                 return Response(user.data, status=status.HTTP_200_OK)
-            print(Response.error)
             return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
         
         except Exception as e:
+            print("error : ", str(e))
             return Response({"message": "An error occurred while retrieving user data"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -195,10 +196,12 @@ class GetFollowedPrograms(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
         try:
+            print("inside GetFollowedPrograms")
             user = request.user
             if user.is_verified:
                 programs = FollowedPrograms.objects.filter(user=user)
-                serializer = FollowedProgramSerializer(programs, many=True)
+                print("these are the followed programms", programs)
+                serializer = UserFollowedProgramSerializer(programs, many=True)
                 print(serializer.data)
                 return Response(serializer.data, status=status.HTTP_200_OK)
             return Response("User is not verified", status=status.HTTP_400_BAD_REQUEST)
@@ -235,7 +238,7 @@ class GetUserById(APIView):
 #             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
 
-
+# follow a program
 class FollowProgram(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -253,3 +256,108 @@ class FollowProgram(APIView):
             return Response({'message': 'Program not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+# unfollow a program
+class UnfollowProgram(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, id):
+        try:
+            program = get_object_or_404(FitnessProgram, id=id)
+            user = request.user
+            followed_program = FollowedPrograms.objects.get(user=user)
+            if program in followed_program.program.all():
+                followed_program.program.remove(program)
+                return Response({'message': 'Successfully unsubscribed from the program'}, status=status.HTTP_200_OK)
+            else:
+                return Response({'message': 'You are not subscribed to this program'}, status=status.HTTP_200_OK)
+        except FitnessProgram.DoesNotExist:
+            return Response({'message': 'Program not found'}, status=status.HTTP_404_NOT_FOUND)
+        except FollowedPrograms.DoesNotExist:
+            return Response({'message': 'You are not subscribed to any program'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+        
+class GetUserTrainers(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request):
+        try:
+            user = request.user
+            if user.is_verified:
+                programs = FollowedPrograms.objects.filter(user=user)
+                trainers = set()
+                for followed_program in programs:
+                    for program in followed_program.program.all():
+                    # Add the trainer of each followed program to the set of trainers
+                        trainers.add(program.trainer)
+                    
+                
+                serializer = TrainerSerializer(trainers, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("User is not verified", status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print("error", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class GetUserContacts(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            user = request.user
+            if user.is_verified:
+                programs = FollowedPrograms.objects.filter(user=user)
+                trainers = set()
+                for followed_program in programs:
+                    for program in followed_program.program.all():
+                        # Add the trainer of each followed program to the set of trainers
+                        trainers.add(program.trainer)
+                users = []
+                for trainer in trainers:
+                    # Change here: Get the first instance of UserAccount
+                    user_instance = UserAccount.objects.filter(trainer_profile=trainer).first()
+                    if user_instance:
+                        users.append(user_instance)
+                # Change here: Pass users list to serializer, not queryset
+                serializer = UserSerializer(users, many=True)
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response("User is not verified", status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print("error", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+# class UserLogout(APIView):
+#     print("request received")
+#     permission_classes = [permissions.IsAuthenticated]
+#     
+#     def post(self, request):
+#         print("The request is : ", request)
+#         try:
+#             user = request.user
+#             user.logged_in = False
+            # print("The user is " , user)
+            # print("The user logged status is " , user.logged_in)
+#             return Response("User logged Out", status=status.HTTP_200_OK)
+#         except Exception as e:
+#             print("error : ", str(e))
+#             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+class UserLogout(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        print("the user is being logged out")
+        try:
+            user = request.user
+            user.logged_in = False
+            user.save()
+            print("The user is " , user)
+            print("The user logged status is " , user.logged_in)
+            return Response("User logged out", status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

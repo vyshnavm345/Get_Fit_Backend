@@ -4,6 +4,11 @@ from django.dispatch import receiver
 from .models import UserAccount, Profile
 
 
+from django.dispatch import Signal
+
+user_authenticated = Signal()
+
+
 @receiver(post_save, sender=UserAccount)
 def create_profile(sender, instance, created, **kwargs):
     print("the user's is_trainer field is ", instance.is_trainer)
@@ -22,6 +27,14 @@ def update_profile(sender, instance, created, **kwargs):
         instance.profile.save()
         print("Profile Updated!")
 
+@receiver(user_authenticated)
+def user_authenticated_callback(sender, user, **kwargs):
+    print("signal received")
+    print("the user is : ", user)
+    user.logged_in = True  # Set the logged_in field (assuming it exists in your model)
+    user.save()
+    print(f"User {user.fullname()} logged in. Status: {user.logged_in}")
 
-# post_save.connect(update_profile, sender=UserAccount)
+
+
 # ctrl + shift + l = select dublicates

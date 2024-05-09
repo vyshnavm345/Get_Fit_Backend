@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from .models import FitnessProgram, Lesson
 from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer
 from trainer.models import Trainer_profile
-
+from django.shortcuts import get_object_or_404
 
 # create new programme
 class FitnessProgramCreateView(APIView):
@@ -104,9 +104,22 @@ class CreateLesson(APIView):
 class GetLessonList(APIView):
     def get(self, request, pk):
         try:
-            lessons = Lesson.objects.filter(program_id=pk)
+            lessons = Lesson.objects.filter(program_id=pk).order_by("lesson_number")
             serializer = ProgrammeLessonSerializer(lessons, many=True)
             return Response(serializer.data, status=status.HTTP_200_OK)
         except:
             return Response({"message":"Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
         
+
+class DeleteLesson(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, pk):
+        try:
+            lesson = get_object_or_404(Lesson, id=pk)
+            lesson.delete()
+            return Response({'message': 'Lesson deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Lesson.DoesNotExist:
+            return Response({'message': 'Lesson not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

@@ -4,6 +4,7 @@ from django.core import exceptions
 
 from .models import Profile, FollowedPrograms
 from django.contrib.auth import get_user_model
+from .models import UserAccount
 
 User = get_user_model()
 
@@ -82,9 +83,9 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
 #         model = FollowedPrograms
 #         fields = '__all__'
         
-from fitness_program.serializers import FitnessProgramSerializer
+from fitness_program.serializers import UpdatedFitnessProgramSerializer, FitnessProgramSerializer
 
-class FollowedProgramSerializer(serializers.ModelSerializer):
+class UserFollowedProgramSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     program = FitnessProgramSerializer(many=True, read_only=True)
 
@@ -94,3 +95,22 @@ class FollowedProgramSerializer(serializers.ModelSerializer):
         
     def get_user_name(self, obj):
         return obj.user.fullname()
+
+
+class FollowedProgramSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    program = serializers.SerializerMethodField()
+
+    class Meta:
+        model = FollowedPrograms
+        fields = ['id', 'user', 'username', 'program', 'status', 'created_on']
+        
+    def get_username(self, obj):
+        return obj.user.fullname()
+    
+    def get_program(self, obj):
+        trainer_id = self.context.get('trainer_id')
+        programs = obj.program.filter(trainer__id=trainer_id)
+        return UpdatedFitnessProgramSerializer(programs, many=True, context=self.context).data
+    
+    

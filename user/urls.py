@@ -7,7 +7,11 @@ from .views import (
     Verify_email,
     GetFollowedPrograms,
     GetUserById,
-    FollowProgram
+    FollowProgram,
+    UnfollowProgram,
+    GetUserTrainers,
+    GetUserContacts, 
+    UserLogout
 )
 
 urlpatterns = [
@@ -18,4 +22,8 @@ urlpatterns = [
     path("getFollowedPrograms/", GetFollowedPrograms.as_view()),
     path("getUserById/<int:id>/", GetUserById.as_view()),
     path("followProgram/<int:id>/", FollowProgram.as_view()),
+    path("unfollowProgram/<int:id>/", UnfollowProgram.as_view()),
+    path("getUserTrainers/", GetUserTrainers.as_view()),
+    path("getUserContact/", GetUserContacts.as_view()),
+    path("logout/", UserLogout.as_view()),
 ]
