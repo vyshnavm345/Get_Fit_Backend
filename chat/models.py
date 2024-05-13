@@ -10,3 +10,13 @@ class ChatMessage(models.Model):
 
     def __str__(self):
         return f"{self.sender.fullname()}: {self.message[:20]}" 
+    
+class Notification(models.Model):
+    recipient = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name='notifications')
+    message = models.TextField()
+    sender = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    seen = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.sender} to {self.recipient}: {self.message}"

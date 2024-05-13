@@ -45,7 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(
         max_length=None, use_url=True, allow_null=True, required=False
     )
-
+    user_id = serializers.SerializerMethodField()
     class Meta:
         model = User
         fields = (
@@ -55,8 +55,14 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "profile_picture",
             "is_staff",
+            "user_id",
         )
 
+    def get_user_id(self, obj):
+        if obj:
+            return obj.id
+        else:
+            return None
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile

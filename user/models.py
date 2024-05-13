@@ -77,6 +77,7 @@ class Profile(models.Model):
     age = models.PositiveIntegerField(blank=True, null=True)
     body_fat = models.FloatField(blank=True, null=True)
     phone = models.CharField(max_length=50, null=True, blank=True)
+    online_user_ids = models.JSONField(default=list)
 
     def __str__(self):
         return self.user.first_name

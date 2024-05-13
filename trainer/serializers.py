@@ -14,6 +14,7 @@ class TrainerProfileSerializer(serializers.ModelSerializer):
 
 class TrainerSerializer(serializers.ModelSerializer):
     username = serializers.SerializerMethodField()
+    user_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Trainer_profile
@@ -24,3 +25,9 @@ class TrainerSerializer(serializers.ModelSerializer):
             return f"{obj.user.first_name} {obj.user.last_name}"
         else:
             return "Unknown"
+        
+    def get_user_id(self, obj):
+        if obj.user:
+            return obj.user.id
+        else:
+            return None
