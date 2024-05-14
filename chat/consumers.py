@@ -118,6 +118,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             "timestamp": message_data["timestamp"],
             "category" : 'message',
             'receiver': self.receiver,
+            "sender_id": message_data['sender']
             
         }
         
@@ -197,6 +198,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
             "type": "notification.message",
             "message": message,
             "sender": self.user.id,
+            "sender_id": self.user.id,
             "category": 'status',
             "receiver" : receiver.id,
         }
@@ -254,6 +256,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'payload': event['message'],
             "sender": event['sender'],
+            "sender_id" : event['sender_id'],
             "type": event['type'],
             "category" : event['category'],
             
