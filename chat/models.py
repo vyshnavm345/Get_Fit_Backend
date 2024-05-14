@@ -5,11 +5,16 @@ from user.models import UserAccount
 class ChatMessage(models.Model):
     room_name = models.CharField(max_length=255)
     sender = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    type = models.CharField(max_length=10, blank=True)
+    data = models.BinaryField(blank=True)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)  
 
     def __str__(self):
-        return f"{self.sender.fullname()}: {self.message[:20]}" 
+        if self.type == "text":
+            return f"{self.sender.fullname()}: {self.message[:20]}"
+        else:
+            return f"{self.sender.fullname()}: Sent a {self.type} message"
     
 class Notification(models.Model):
     recipient = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name='notifications')
