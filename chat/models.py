@@ -6,7 +6,9 @@ class ChatMessage(models.Model):
     room_name = models.CharField(max_length=255)
     sender = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
     type = models.CharField(max_length=10, blank=True)
-    data = models.BinaryField(blank=True)
+    # data = models.BinaryField(blank=True)
+    media_file = models.FileField(upload_to="chat/media", blank=True)  # For audio/video
+    image = models.ImageField(upload_to="chat/images", blank=True)
     message = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)  
 
