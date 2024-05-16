@@ -47,6 +47,7 @@ class FitnessProgram(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
     cover_image = models.ImageField(upload_to="fitness_programs/images", null=True, blank=True)
     category = models.CharField(max_length=50, choices=PROGRAM_CATEGORIES, default="Other")
+    price = models.PositiveIntegerField()
     
     def __str__(self):
         return self.program_name

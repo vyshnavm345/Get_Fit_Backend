@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from fitness_program.serializers import FitnessProgramSerializer
 from fitness_program.models import FitnessProgram
+from .permissions.admin_permission import IsAdminUser
 
 # from django.dispatch import user_authenticated
 # from django.dispatch import user_authenticated
@@ -361,3 +362,54 @@ class UserLogout(APIView):
         except Exception as e:
             print("error : ", str(e))
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class GetUserCount(APIView):
+    def get(self, request):
+        try:  
+            count = UserAccount.objects.exclude(is_superuser=True).count()
+            return Response({count}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+class GetLoggedInUsers(APIView):
+    def get(self, request):
+        try:
+            print("Total user called")
+            online_users = UserAccount.objects.filter(is_trainer=False, logged_in=True, is_superuser=False)
+            print("Total user : ", online_users)
+            serializer = UserSerializer(online_users, many=True)
+            print("serialized data : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class GetAllUsers(APIView):
+    def get(self, request):
+        try:
+            # users = UserAccount.objects.all()
+            users = UserAccount.objects.exclude(is_superuser=True).exclude(is_trainer=True).order_by('-id')
+            serializer = UserSerializer(users, many=True)
+            print("serialized data : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+# Block and unblock user
+class ChangeUserAccess(APIView):
+    # only admin can access these methods
+    permission_classes = [IsAdminUser]
+    def get(self, request, id):
+        try:
+            user = UserAccount.objects.get(id=id)
+            user.blocked = not user.blocked
+            user.save()
+            message = "User Blocked" if user.blocked else "User Unblocked"
+            return Response({"message": message}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)        

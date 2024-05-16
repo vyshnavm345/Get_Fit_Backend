@@ -2,7 +2,7 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import FitnessProgram, Lesson
-from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer
+from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer
 from trainer.models import Trainer_profile
 from django.shortcuts import get_object_or_404
 
@@ -123,3 +123,55 @@ class DeleteLesson(APIView):
             return Response({'message': 'Lesson not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+class GetProgramCount(APIView):
+    def get(self, request):
+        try:
+            print("Total user called")
+            count = FitnessProgram.objects.all().count()
+            print("Total user : ", count)
+            return Response({count}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class GetPopularProgram(APIView):
+    def get(self, request):
+        try:
+            popular_programs = []
+            # programs = FitnessProgram.objects.select_related('trainer').all()  # Optimize queries
+            programs = FitnessProgram.objects.select_related('trainer').order_by('-followers')
+            for program in programs:
+                count = program.followers.all().count()
+                new = {
+                'followers': count,
+                'name': program.program_name,
+                'sales': count * program.price,
+                'trainer': program.trainer.username(),
+                }
+                # print(new)
+                if new not in popular_programs:
+                    popular_programs.append(new)
+            popular_programs = sorted(popular_programs, key=lambda p: p['followers'], reverse=True)
+            # returning the top 5 best sellers
+            serializer = PopularProgramSerializer(popular_programs[:5], many=True)
+
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("Error:", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# class GetAllPrograms(APIView):
+#     print("Inside the get trainer function")
+#     def get(self, request):
+#         try:
+#             programs = FitnessProgram.objects.all().order_by('-id')
+#             serializer = FitnessProgramSerializer(programs, many=True)
+#             print("serialized data : ", serializer.data)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+#         except Exception as e:
+#             print("error : ", str(e))
+#             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

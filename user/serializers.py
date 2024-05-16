@@ -56,6 +56,7 @@ class UserSerializer(serializers.ModelSerializer):
             "profile_picture",
             "is_staff",
             "user_id",
+            "blocked"
         )
 
     def get_user_id(self, obj):
@@ -81,6 +82,7 @@ class UserWithProfileSerializer(serializers.ModelSerializer):
             "email",
             "profile_picture",
             "is_trainer",
+            "is_superuser",
             "profile",
         ]
 

@@ -34,3 +34,9 @@ class UpdatedFitnessProgramSerializer(serializers.ModelSerializer):
             return super().to_representation(programs)
         else:
             return super().to_representation(instance)
+        
+class PopularProgramSerializer(serializers.Serializer):
+    followers = serializers.IntegerField()
+    name = serializers.CharField(max_length=100)
+    sales = serializers.IntegerField()
+    trainer = serializers.CharField(max_length=100)

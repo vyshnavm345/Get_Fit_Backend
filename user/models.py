@@ -51,7 +51,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     logged_in= models.BooleanField(default=False)
-
+    blocked = models.BooleanField(default=False)
     objects = UserAccountManager()
 
     USERNAME_FIELD = "email"
@@ -97,7 +97,24 @@ class FollowedPrograms(models.Model):
         followed_programs_list = []
         # logic for retriving the list of followed programms by this instance
         return followed_programs_list
+    
+
+
+# class ProgramFollowers(models.Model):
+#   program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE, related_name='program_followers')
+#   user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, related_name='followed_fitness_programs')
+#   created_on = models.DateField(default=timezone.now)
+
+#   class Meta:
+#     unique_together = ('program', 'user')  # Enforce unique user-program combination
+
+#   def __str__(self):
+#     return f"{self.user.username} follows program: {self.program.program_name}"
+    
+    
 # class Posts(models.Model):
 #     title = models.CharField()
 #     created_at = models.DateTimeField(auto_now_add=True)
 #     updated_at = models.DateTimeField(auto_now=True)
+
+

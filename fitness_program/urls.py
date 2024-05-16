@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FitnessProgramCreateView, FitnessProgramListAPIView, Get_fitness_program, Get_trainer_programme, CreateLesson, GetLessonList, DeleteLesson
+from .views import FitnessProgramCreateView, FitnessProgramListAPIView, Get_fitness_program, Get_trainer_programme, CreateLesson, GetLessonList, DeleteLesson,  GetProgramCount, GetPopularProgram
 
 urlpatterns = [
     path("create/", FitnessProgramCreateView.as_view()),
@@ -9,5 +9,11 @@ urlpatterns = [
     path("createLesson/<int:pk>/", CreateLesson.as_view()),
     path("getLessons/<int:pk>/", GetLessonList.as_view()),
     path("DeleteLesson/<int:pk>/", DeleteLesson.as_view()),
+    path("getProgramCount/", GetProgramCount.as_view()),
+    path("getPopularProgram/", GetPopularProgram.as_view()),
    
 ]
+
+
+
+

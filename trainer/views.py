@@ -132,3 +132,40 @@ class GetTrainerContacts(APIView):
 #         except Exception as e:
 #             print("error", str(e))
 #             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+class GetTrainerCount(APIView):
+    def get(self, request):
+        try:
+            print("Total user called")
+            count = Trainer_profile.objects.all().count()
+            print("Total user : ", count)
+            return Response({count}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+
+class GetLoggedInTrainers(APIView):
+    def get(self, request):
+        try:
+            print("Total user called")
+            online_users = UserAccount.objects.filter(is_trainer=True, logged_in=True)
+            print("Total user : ", online_users)
+            serializer = UserSerializer(online_users, many=True)
+            print("serialized data : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+class GetAllTrainers(APIView):
+    print("Inside the get trainer function")
+    def get(self, request):
+        try:
+            users = UserAccount.objects.exclude(is_superuser=True).exclude(is_trainer=False).order_by('-id')
+            serializer = UserSerializer(users, many=True)
+            print("serialized data : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

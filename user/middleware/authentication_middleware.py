@@ -5,8 +5,10 @@ from django.conf import settings
 import jwt
 from user.models import UserAccount
 from django.contrib.auth.models import AnonymousUser
+from rest_framework.response import Response
+from rest_framework import status
 
-    
+# middleware that triggers a signal and turns the user logged in field to true
 class AuthenticationWithSignalMiddleware(AuthenticationMiddleware):
 
     def process_request(self, request):
@@ -21,7 +23,12 @@ class AuthenticationWithSignalMiddleware(AuthenticationMiddleware):
                 user = UserAccount.objects.get(pk=user_id)  # Retrieve user from the database
                 if user and user.is_authenticated:
                     # print("User extracted from token:", user)
-                    if not user.logged_in:
+                    # if not user.logged_in:
+                    #     user_authenticated.send(sender=self.__class__, user=user)
+                    """If user is blocked by admin the request is stopped from proceeding futher"""
+                    if user.blocked:
+                        return Response({"error": "You have been temporarily blocked by the admin."}, status=status.HTTP_403_FORBIDDEN)
+                    elif not user.logged_in:
                         user_authenticated.send(sender=self.__class__, user=user)
             except jwt.ExpiredSignatureError:
                 print("Token expired.")
