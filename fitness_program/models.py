@@ -4,7 +4,7 @@ from trainer.models import Trainer_profile
 from django.core.exceptions import ValidationError
 from django.core.validators import URLValidator
 from urllib.parse import urlparse
-
+# from user.models import UserAccount
 def validate_youtube_url(value):
     """
     Custom validator to ensure that the URL belongs to YouTube.
@@ -48,7 +48,7 @@ class FitnessProgram(models.Model):
     cover_image = models.ImageField(upload_to="fitness_programs/images", null=True, blank=True)
     category = models.CharField(max_length=50, choices=PROGRAM_CATEGORIES, default="Other")
     price = models.PositiveIntegerField()
-    
+    is_published = models.BooleanField(default=False)
     def __str__(self):
         return self.program_name
     
@@ -65,3 +65,11 @@ class Lesson(models.Model):
     def __str__(self):
         return self.title
     
+class PublishRequest(models.Model):
+    sender = models.ForeignKey('user.UserAccount', on_delete=models.CASCADE)
+    fitnessProgram = models.ForeignObject(FitnessProgram, on_delete=models.CASCADE, from_fields=['id'], to_fields=['id'])
+    created_at = models.DateTimeField(auto_now_add=True)
+    approved = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.sender.first_name} send a request to publish {self.fitnessProgram.program_name}"

@@ -5,6 +5,8 @@ from .models import FitnessProgram, Lesson
 from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer
 from trainer.models import Trainer_profile
 from django.shortcuts import get_object_or_404
+from user.permissions.admin_permission import IsAdminUser
+from .models import PublishRequest
 
 # create new programme
 class FitnessProgramCreateView(APIView):
@@ -15,15 +17,27 @@ class FitnessProgramCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response({'message':"Programme created"}, status=status.HTTP_201_CREATED)
+        print(serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
 # retrive all the available programms
 class FitnessProgramListAPIView(APIView):
-    def get(self, request):
-        programs = FitnessProgram.objects.all()
+    def get(self, request): 
+        programs = FitnessProgram.objects.filter(is_published=True).order_by('-id')
         serializer = FitnessProgramSerializer(programs, many=True)
         # print("programme list : ", serializer.data[0])
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+#admin retrival of the fitness programms
+class FitnessProgramList(APIView):
+    # only admin can access these methods
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        programs = FitnessProgram.objects.all().order_by('-id')
+        print(programs)
+        serializer = FitnessProgramSerializer(programs, many=True)
+        print("programme list : ", serializer.data)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
 # retrive individual programme
@@ -53,14 +67,14 @@ class CreateLesson(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def post(self, request, pk):
         program = FitnessProgram.objects.get(id=pk)
-        print("this is the programme")
+        # print("this is the programme")
         id =request.data.get('id')
         # lesson = Lesson.objects.get(id=id)
         if id:
-            print("The form is for updation ", request.data)
+            # print("The form is for updation ", request.data)
             try:
                 message = self.updateLesson(request, id)
-                print("back in the get method")
+                # print("back in the get method")
                 return Response(message, status=status.HTTP_200_OK)
             except:
                 return Response({"message":"Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
@@ -71,24 +85,24 @@ class CreateLesson(APIView):
             if already_exists:
                 return Response({"message": "Lesson number already exists"}, status=status.HTTP_400_BAD_REQUEST)
             if serializer.is_valid():
-                print("data is valid")
+                # print("data is valid")
                 serializer.save(program=program)
-                print("serializer is saved")
+                # print("serializer is saved")
                 return Response({'message':"Lesson Added"}, status=status.HTTP_201_CREATED)
             print("serializer error is", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     def updateLesson(self, request, id):
-        print("updating the lesson")
+        # print("updating the lesson")
         lesson = Lesson.objects.get(id=id)
         data = request.data.copy() 
         if isinstance(request.data.get('image'), str):
-            print("image is a string")
+            # print("image is a string")
             del data['image']
         serializer = ProgrammeLessonSerializer(instance=lesson, data=data, partial=True)
-        print("the data has been updated")
+        # print("the data has been updated")
         if serializer.is_valid():
-            print("Serializer is valid : data ")
+            # print("Serializer is valid : data ")
             serializer.save()
             message = {'message': "Lesson updated successfully"}
             return message
@@ -127,12 +141,12 @@ class DeleteLesson(APIView):
 class GetProgramCount(APIView):
     def get(self, request):
         try:
-            print("Total user called")
+            # print("Total user called")
             count = FitnessProgram.objects.all().count()
-            print("Total user : ", count)
+            # print("Total user : ", count)
             return Response({count}, status=status.HTTP_200_OK)
         except Exception as e:
-            print("error : ", str(e))
+            # print("error : ", str(e))
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         
         
@@ -163,15 +177,47 @@ class GetPopularProgram(APIView):
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
 
-
-# class GetAllPrograms(APIView):
-#     print("Inside the get trainer function")
-#     def get(self, request):
-#         try:
-#             programs = FitnessProgram.objects.all().order_by('-id')
-#             serializer = FitnessProgramSerializer(programs, many=True)
-#             print("serialized data : ", serializer.data)
-#             return Response(serializer.data, status=status.HTTP_200_OK)
-#         except Exception as e:
-#             print("error : ", str(e))
-#             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+# to publish or block a fitness program
+class ChangePublishStatus(APIView):
+    print("publish status called")
+    # only admin can access these methods
+    permission_classes = [IsAdminUser]
+    def get(self, request, id):
+        try:
+            program = FitnessProgram.objects.get(id=id)
+            
+            program.is_published = not program.is_published
+            program.save()
+            print("program", program)
+            print(program.is_published)
+            message = "Program Published" if program.is_published else  "Program Blocked"
+            print(message)
+            
+            return Response({"messsage": message}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class PublishRequestHandler(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, id):
+        try:
+            existing_request = PublishRequest.objects.get(id=id)
+            if existing_request:
+                return Response("Request already submitted", status=status.HTTP_200_OK)
+            user = request.user
+            program = FitnessProgram.objects.get(id=id)
+            new_request = PublishRequest.objects.create( sender=user, fitnessProgram=program)
+            
+            program.is_published = not program.is_published
+            program.save()
+            print("program", program)
+            print(program.is_published)
+            message = "Program Published" if program.is_published else  "Program Blocked"
+            print(message)
+            
+            return Response({"messsage": message}, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
