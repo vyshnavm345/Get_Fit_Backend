@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FitnessProgram, Lesson
+from .models import FitnessProgram, Lesson, PublishRequest
 
 class FitnessProgramSerializer(serializers.ModelSerializer):
     trainer_name = serializers.SerializerMethodField()
@@ -14,6 +14,11 @@ class FitnessProgramSerializer(serializers.ModelSerializer):
 class ProgrammeLessonSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lesson
+        fields = '__all__'
+        
+class PublishRequestSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PublishRequest
         fields = '__all__'
         
 class UpdatedFitnessProgramSerializer(serializers.ModelSerializer):

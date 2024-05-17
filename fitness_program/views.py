@@ -2,7 +2,7 @@ from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import FitnessProgram, Lesson
-from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer
+from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer, PublishRequestSerializer
 from trainer.models import Trainer_profile
 from django.shortcuts import get_object_or_404
 from user.permissions.admin_permission import IsAdminUser
@@ -198,26 +198,70 @@ class ChangePublishStatus(APIView):
             print("error : ", str(e))
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
         
-        
+
 class PublishRequestHandler(APIView):
     permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, id):
         try:
+            print("inside function")
             existing_request = PublishRequest.objects.get(id=id)
             if existing_request:
-                return Response("Request already submitted", status=status.HTTP_200_OK)
+                return Response({"message":"Request already submitted"}, status=status.HTTP_200_OK)
+
+        except PublishRequest.DoesNotExist:  # Handle case where request doesn't exist
             user = request.user
             program = FitnessProgram.objects.get(id=id)
-            new_request = PublishRequest.objects.create( sender=user, fitnessProgram=program)
-            
+            new_request = PublishRequest.objects.create(sender=user, fitnessProgram=program)
+
             program.is_published = not program.is_published
             program.save()
-            print("program", program)
-            print(program.is_published)
-            message = "Program Published" if program.is_published else  "Program Blocked"
-            print(message)
+
+            message = "Program Published" if program.is_published else "Program Blocked"
+
+            return Response({"message": message}, status=status.HTTP_200_OK)
+
+        except Exception as e:  # Handle other potential exceptions
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+class GetPublishRequests(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request):
+        try:
+            print("Total get publish request is called")
+            pending_requests = []
+            new_requests = PublishRequest.objects.filter(approved=False)
+            for request in new_requests:
+                pending_requests.append(request.fitnessProgram)
+            print("The pending requests are",pending_requests)
+            # print("Total user : ", count)
+            serializer = FitnessProgramSerializer(pending_requests, many=True)
+            print("The serialized data is : ", serializer.data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+
+class Publishprogram(APIView):
+    permission_classes = [IsAdminUser]
+    def get(self, request, id):
+        try:
+            program_to_publish = FitnessProgram.objects.get(id=id)
+            program_request = PublishRequest.objects.get(id=id)
             
-            return Response({"messsage": message}, status=status.HTTP_200_OK)
+            program_request.approved = True
+            program_request.save()
+            
+            program_to_publish.is_published = True
+            program_to_publish.save()
+            
+            # print("The pending requests are",pending_requests)
+            # print("Total user : ", count)
+            # serializer = FitnessProgramSerializer(pending_requests, many=True)
+            # print("The serialized data is : ", serializer.data)
+            return Response({"message":"Program Published"}, status=status.HTTP_200_OK)
         except Exception as e:
             print("error : ", str(e))
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
