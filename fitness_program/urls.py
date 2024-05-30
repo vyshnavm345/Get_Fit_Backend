@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import FitnessProgramCreateView, FitnessProgramListAPIView, Get_fitness_program, Get_trainer_programme, CreateLesson, GetLessonList, DeleteLesson,  GetProgramCount, GetPopularProgram, ChangePublishStatus, FitnessProgramList, PublishRequestHandler, GetPublishRequests, Publishprogram
+from .views import FitnessProgramCreateView, FitnessProgramListAPIView, Get_fitness_program, Get_trainer_programme, CreateLesson, GetLessonList, DeleteLesson,  GetProgramCount, GetPopularProgram, ChangePublishStatus, FitnessProgramList, PublishRequestHandler, GetPublishRequests, Publishprogram, SavelessonProgress, GetlessonProgress
 
 urlpatterns = [
     path("create/", FitnessProgramCreateView.as_view()),
@@ -16,6 +16,8 @@ urlpatterns = [
     path("publishRequest/<int:id>/", PublishRequestHandler.as_view()),
     path("getPublishRequests/", GetPublishRequests.as_view()),
     path("publishprogram/<int:id>/", Publishprogram.as_view()),
+    path("updatelessonProgress/<str:id>/", SavelessonProgress.as_view()),
+    path("getlessonProgress/<int:user_id>/<str:id>/", GetlessonProgress.as_view()),
    
 ]
 

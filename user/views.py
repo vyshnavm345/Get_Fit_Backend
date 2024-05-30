@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from rest_framework_simplejwt.tokens import RefreshToken
 from fitness_program.serializers import FitnessProgramSerializer
 from fitness_program.models import FitnessProgram
-from .permissions.admin_permission import IsAdminUser
+from .permissions.admin_permission import IsAdminUser, IsNotBlocked
 
 # from django.dispatch import user_authenticated
 # from django.dispatch import user_authenticated
@@ -57,7 +57,8 @@ class RegisterView(APIView):
         # current_site = get_current_site(request).domain
         # relative_link = reverse("email_verification")
         # absurl = "http://" + current_site + relative_link + "?token=" + str(token)
-        absurl = "http://127.0.0.1:3000/verify/" + str(token)
+        absurl = "http://127.0.0.1/verify/" + str(token)
+        # absurl = "http://127.0.0.1:3000/verify/" + str(token)
         
         email_body = (
             "Hi "
@@ -114,7 +115,7 @@ class Verify_email(generics.GenericAPIView):
 
 
 class RetriveUserView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsNotBlocked]
 
     def get(self, request):
         user = request.user
@@ -122,6 +123,8 @@ class RetriveUserView(APIView):
             user = UserSerializer(user)
 
             return Response(user.data, status=status.HTTP_200_OK)
+        if user.blocked:
+            return Response({"message":"You have been temporarly blocked by the Admin"}, status=status.HTTP_401_UNAUTHORIZED)
         return Response({"message":"Email not Verified"}, status=status.HTTP_401_UNAUTHORIZED)
 
 # add a decorater here to let only the once in the verified group to access
@@ -131,6 +134,8 @@ class Retrive_full_user_data(APIView):
         print("retreving userdata")
         try:
             user = request.user
+            if user.blocked:
+                return Response({"message":"You have been temporarly blocked by the Admin"}, status=status.HTTP_401_UNAUTHORIZED)
             if user.is_verified:
                 user = UserWithProfileSerializer(user)
                 return Response(user.data, status=status.HTTP_200_OK)

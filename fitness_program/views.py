@@ -1,12 +1,13 @@
 from rest_framework import status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import FitnessProgram, Lesson
-from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer, PublishRequestSerializer
+from .models import FitnessProgram, Lesson, Progress
+from .serializers import FitnessProgramSerializer, ProgrammeLessonSerializer, PopularProgramSerializer, PublishRequestSerializer, LessonProgressSerializer
 from trainer.models import Trainer_profile
 from django.shortcuts import get_object_or_404
 from user.permissions.admin_permission import IsAdminUser
 from .models import PublishRequest
+from user.models import UserAccount
 
 # create new programme
 class FitnessProgramCreateView(APIView):
@@ -264,4 +265,96 @@ class Publishprogram(APIView):
             return Response({"message":"Program Published"}, status=status.HTTP_200_OK)
         except Exception as e:
             print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+        
+class SavelessonProgress(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    def get(self, request, id):
+        try:
+            print("inside view")
+            user = request.user
+            #eg: id = "26-1"
+            program_id, lesson_id = id.split('-')
+            program = FitnessProgram.objects.get(id=int(program_id))
+            print("The program : ", program)
+            lesson = Lesson.objects.get(lesson_number=id)
+            # progress = Progress.objects.create(user=user, program=program, current_lesson=lesson, is_completed=True)
+            
+            existing_progress = Progress.objects.filter(user=user, program=program, current_lesson=lesson).first()
+            print("Existing progress is : ", existing_progress)
+            if not existing_progress:
+                print("creating the progress")
+                progress = Progress.objects.create(user=user, program=program, current_lesson=lesson, is_completed=True)
+                return Response({"message": "Lesson marked as completed"}, status=status.HTTP_201_CREATED)
+            else:
+                print("already created")
+                return Response({"message": "Lesson already marked as completed"}, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+# class GetlessonProgress(APIView):
+#     permission_classes = [permissions.IsAuthenticated]
+
+#     def get(self, request, user_id, id):
+#         try:
+#             user = UserAccount.objects.get(id=user_id)
+#             program_id, lesson_id = id.split('-')
+#             program = FitnessProgram.objects.get(id=int(program_id))
+#             data = {
+#                 "user": user,
+#                 "program": program,
+#             }
+
+#             serializer = LessonProgressSerializer(data)
+#             return Response(serializer.data, status=status.HTTP_200_OK)
+
+#         except Exception as e:
+#             print("Error:", str(e))
+#             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+class GetCompletedlessons(APIView):
+    permissions =[permissions.IsAuthenticated]
+    
+    def get(self, request, id):
+        try:
+            user = request.user
+            program = FitnessProgram.objects.get(id=id)
+            print("The program : ", program)
+            # progress = Progress.objects.create(user=user, program=program, current_lesson=lesson, is_completed=True)
+            
+            existing_progress = Progress.objects.filter(user=user, program=program, current_lesson=lesson)
+
+            if not existing_progress:
+                progress = Progress.objects.create(user=user, program=program, current_lesson=lesson, is_completed=True)
+                return Response({"message": "Lesson completed"}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({"message": "Lesson already marked as completed"}, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            print("error : ", str(e))
+            return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+        
+class GetlessonProgress(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, user_id, id):
+        try:
+            user = UserAccount.objects.get(id=user_id)
+            program_id, lesson_id = id.split('-')
+            program = FitnessProgram.objects.get(id=int(program_id))
+            data = {
+                "user": user,
+                "program": program,
+            }
+
+            serializer = LessonProgressSerializer(data)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            print("Error:", str(e))
             return Response(str(e), status=status.HTTP_400_BAD_REQUEST)

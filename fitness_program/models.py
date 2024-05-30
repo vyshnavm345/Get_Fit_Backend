@@ -65,6 +65,19 @@ class Lesson(models.Model):
     def __str__(self):
         return self.title
     
+
+class Progress(models.Model):
+    user = models.ForeignKey('user.UserAccount', on_delete=models.CASCADE)
+    program = models.ForeignKey(FitnessProgram, on_delete=models.CASCADE)
+    current_lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE)
+    updated_at = models.DateTimeField(auto_now=True)    
+    # status = models.CharField(max_length=50, default="Completed")
+    is_completed = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return f"{self.user.first_name} completed lesson {self.current_lesson.lesson_number} of program {self.program.program_name}"
+    
+    
 class PublishRequest(models.Model):
     sender = models.ForeignKey('user.UserAccount', on_delete=models.CASCADE)
     fitnessProgram = models.ForeignObject(FitnessProgram, on_delete=models.CASCADE, from_fields=['id'], to_fields=['id'])

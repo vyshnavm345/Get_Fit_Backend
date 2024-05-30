@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import FitnessProgram, Lesson, PublishRequest
+from .models import FitnessProgram, Lesson, PublishRequest, Progress
 
 class FitnessProgramSerializer(serializers.ModelSerializer):
     trainer_name = serializers.SerializerMethodField()
@@ -45,3 +45,18 @@ class PopularProgramSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     sales = serializers.IntegerField()
     trainer = serializers.CharField(max_length=100)
+    
+    
+class LessonProgressSerializer(serializers.Serializer):
+  user = serializers.PrimaryKeyRelatedField(read_only=True)
+  program = serializers.PrimaryKeyRelatedField(read_only=True)
+  progress_percentage = serializers.SerializerMethodField()
+
+  def get_progress_percentage(self, obj):
+    program = obj['program']
+    total_lessons = Lesson.objects.filter(program=program).count()
+    completed_lessons = Progress.objects.filter(program=program, user=obj['user'], is_completed=True).count()
+    if total_lessons > 0 and completed_lessons > 0:
+      return (completed_lessons / total_lessons) * 100
+    else:
+      return 0

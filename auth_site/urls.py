@@ -33,7 +33,7 @@ urlpatterns = [
     path("api/trainers/", include("trainer.urls")),
     path("api/fitness_programs/", include("fitness_program.urls")),
     path("api/chat/", include("chat.urls")),
-    path("admin/", admin.site.urls),
+    path("django-admin/", admin.site.urls),
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,3 +1,5 @@
+# import django
+# django.setup()
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -90,9 +92,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             data = text_data_json.get("data")
             image_base64 = data
 
-            # Remove the prefix
-            # image_base64 = image_data.replace('data:image/jpeg;base64,', '') #"data:text/html;base64,
-#                                             "data:image/png;base64,
             print("data : ",image_base64)# Check if data key exists
             
             if data:
@@ -134,29 +133,29 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 print("Error: Missing data for multimedia message")
             
             
-            print("the recepient id : ", receiver)
-            recepient = await sync_to_async(UserAccount.objects.get)(id=receiver)
-            print("the user name is : ", user.id,   user.fullname(), "receiver : ", recepient, recepient.id, recepient.fullname(), recepient.logged_in)
-            self.username = user.fullname()
+        print("the recepient id : ", receiver)
+        recepient = await sync_to_async(UserAccount.objects.get)(id=receiver)
+        print("the user name is : ", user.id,   user.fullname(), "receiver : ", recepient, recepient.id, recepient.fullname(), recepient.logged_in)
+        self.username = user.fullname()
 
-            # Send message to room group
-            
-            print("successfully completed")
+        # Send message to room group
+        
+        print("successfully completed")
 
-            if recepient.logged_in:
-                print("Notification is being sent")
-                print("The message data being passed into send_notification is : ", message_data)
-                # Send notification to notification group
-                await self.send_notification(message_data)
-            else:
-                await sync_to_async(Notification.objects.create)(
-                    recipient=recepient,
-                    message=message_data["message"],
-                    sender=user,
-                    timestamp=message_data["timestamp"]
-                )
+        if recepient.logged_in:
+            print("Notification is being sent")
+            print("The message data being passed into send_notification is : ", message_data)
+            # Send notification to notification group
+            await self.send_notification(message_data)
+        else:
+            await sync_to_async(Notification.objects.create)(
+                recipient=recepient,
+                message=message_data["message"],
+                sender=user,
+                timestamp=message_data["timestamp"]
+            )
 
-    # Receive message from room group
+# Receive message from room group
     async def chat_message(self, event):
         message = event["message"]
 
@@ -208,27 +207,31 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         online_user = await sync_to_async(UserAccount.objects.get)(id=int(id))
         self.user = online_user
         
+        if self.user.is_verified:
         
-        print(f"the {self.user.fullname()} is logged in")
-        if self.user.is_trainer:
-            contacts = await getTrainerContacts(self.user)
-            print("trainer contacts received")
-        else:
-            contacts = await getUserContacts(self.user)
-            print("user contacts received")
-            
-        # print("the contacts are : ", contacts)
-        for user in contacts:
-            await self.send_onlineStatus(user.id, message="user Online")
-            
-        await self.channel_layer.group_add(
-            self.room_group_name,
-            self.channel_name
-        )
-        await self.accept()
+            print(f"the {self.user.fullname()} is logged in")
+            if self.user.is_trainer:
+                contacts = await getTrainerContacts(self.user)
+                print("trainer contacts received")
+            else:
+                contacts = await getUserContacts(self.user)
+                print("user contacts received")
+                
+            # print("the contacts are : ", contacts)
+            for user in contacts:
+                await self.send_onlineStatus(user.id, message="user Online")
+                
+            await self.channel_layer.group_add(
+                self.room_group_name,
+                self.channel_name
+            )
+            await self.accept()
 
     async def disconnect(self, close_code):
         print(f"the {self.user.fullname()} is logging out")
+        self.user.logged_in = False
+        save_user = sync_to_async(self.user.save)
+        await save_user()
         if self.user.is_trainer:
             contacts = await getTrainerContacts(self.user)
             print("trainer contacts received")
